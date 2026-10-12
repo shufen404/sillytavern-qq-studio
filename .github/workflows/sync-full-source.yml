@@ -1,0 +1,196 @@
+name: Sync full source and publish v1.0.1
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-source-sync-v1.0.1
+  cancel-in-progress: false
+
+jobs:
+  sync-and-release:
+    if: github.repository == 'shufen404/sillytavern-qq-studio' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Check out main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e
+        with:
+          node-version: 24
+
+      - name: Download and authenticate the published source archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v1.0.1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'v1.0.1 already exists; refusing to overwrite a published release.'
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/studio-import"
+          gh release download v1.0.0 --repo "$GITHUB_REPOSITORY" \
+            --pattern 'SillyTavern-QQ-Studio-Full-v1.0.0.zip' \
+            --dir "$RUNNER_TEMP/studio-import"
+          cd "$RUNNER_TEMP/studio-import"
+          printf '%s  %s\n' \
+            '775383ec9f83b18f93cc26b96d7833f4776d786bcc820362b4cb54da50173a18' \
+            'SillyTavern-QQ-Studio-Full-v1.0.0.zip' | sha256sum --check --strict
+
+      - name: Import full application without replacing repository metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib, stat, zipfile
+          root = pathlib.Path.cwd()
+          archive = pathlib.Path(os.environ['RUNNER_TEMP']) / 'studio-import/SillyTavern-QQ-Studio-Full-v1.0.0.zip'
+          if (root / 'server.js').exists():
+              edition = json.loads((root / 'STUDIO-EDITION.json').read_text())
+              if edition.get('edition_version') not in ('1.0.0', '1.0.1'):
+                  raise SystemExit('Newer/unknown source exists; refusing to overwrite it.')
+              print('Full source already exists. Preserving current files.')
+          else:
+              forbidden = {'.git', '.github', 'data', 'node_modules', 'runtime', 'backups'}
+              with zipfile.ZipFile(archive) as z:
+                  infos = z.infolist()
+                  if len(infos) > 2000 or sum(i.file_size for i in infos) > 200_000_000:
+                      raise SystemExit('Unexpected archive size.')
+                  for info in infos:
+                      p = pathlib.PurePosixPath(info.filename)
+                      if not p.parts or p.parts[0] != 'SillyTavern-QQ-Studio' or '..' in p.parts or p.is_absolute():
+                          raise SystemExit('Unsafe archive path: ' + info.filename)
+                      relative = pathlib.Path(*p.parts[1:])
+                      if not relative.parts or info.is_dir():
+                          continue
+                      if relative.parts[0] in forbidden or relative.name in ('secrets.json', '.env'):
+                          raise SystemExit('Forbidden archive entry: ' + str(relative))
+                      if relative == pathlib.Path('config.yaml'):
+                          raise SystemExit('User config must not be imported.')
+                      mode = info.external_attr >> 16
+                      if stat.S_ISLNK(mode):
+                          raise SystemExit('Symlinks are not allowed.')
+                      out = root / relative
+                      if not out.resolve().is_relative_to(root.resolve()):
+                          raise SystemExit('Path escaped the checkout.')
+                      out.parent.mkdir(parents=True, exist_ok=True)
+                      out.write_bytes(z.read(info))
+                      out.chmod(0o755 if mode & 0o111 else 0o644)
+          for name in ('server.js', 'public/script.js', 'public/scripts/studio-ui.js', 'default/content/settings.json', 'package-lock.json', 'LICENSE'):
+              if not (root / name).is_file():
+                  raise SystemExit('Missing application source: ' + name)
+          metadata = root / 'STUDIO-EDITION.json'
+          edition = json.loads(metadata.read_text())
+          edition['edition_version'] = '1.0.1'
+          metadata.write_text(json.dumps(edition, ensure_ascii=False, indent=2) + '\n')
+          readme = root / 'README.md'
+          text = readme.read_text()
+          marker = '## 源码与发行版本一致性\n'
+          if marker not in text:
+              heading = '# SillyTavern QQ Studio\n'
+              note = '\n' + marker + '\n从 v1.0.1 起，main 包含完整应用源码。Code → Download ZIP、该版本的 Source code 和 Full 发行附件均包含本体与默认新界面。发行附件由该版本对应的 Git 提交直接生成。旧 v1.0.0 保留作为历史版本。\n'
+              text = text.replace(heading, heading + note, 1)
+              readme.write_text(text)
+          PY
+
+      - name: Verify application defaults and run theme tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check studio-launcher.mjs
+          node --check public/scripts/studio-ui.js
+          node --check public/scripts/studio-personalize.js
+          node studio-tests/theme.test.mjs
+          bash -n start-qq-studio.sh
+          bash -n 启动QQStudio.command
+          python3 - <<'PY'
+          import json, pathlib
+          root = pathlib.Path.cwd()
+          settings = json.loads((root / 'default/content/settings.json').read_text())
+          assert settings['firstRun'] is False
+          assert settings['extension_settings']['studio_ui']['classic'] is False
+          assert settings['extension_settings']['studio_ui']['appearance']['layout'] == 'qq'
+          for name in ('data', 'node_modules', 'runtime', 'secrets.json', 'config.yaml'):
+              assert not (root / name).exists(), name
+          print('Full source, default UI and clean distribution checks passed.')
+          PY
+
+      - name: Commit full source to main without rewriting history
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Sync complete SillyTavern QQ Studio source for v1.0.1'
+          fi
+          gh auth setup-git --hostname github.com
+          git push origin HEAD:main
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Build assets from the exact source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/studio-release"
+          git archive --format=zip --prefix=SillyTavern-QQ-Studio/ "$SOURCE_SHA" \
+            > "$RUNNER_TEMP/studio-release/SillyTavern-QQ-Studio-Full-v1.0.1.zip"
+          cd "$RUNNER_TEMP/studio-release"
+          sha256sum SillyTavern-QQ-Studio-Full-v1.0.1.zip > SillyTavern-QQ-Studio-Full-v1.0.1.sha256
+          python3 - <<'PY'
+          import json, zipfile
+          with zipfile.ZipFile('SillyTavern-QQ-Studio-Full-v1.0.1.zip') as z:
+              assert z.testzip() is None
+              metadata = json.loads(z.read('SillyTavern-QQ-Studio/STUDIO-EDITION.json'))
+              assert metadata['edition_version'] == '1.0.1'
+              assert 'SillyTavern-QQ-Studio/server.js' in z.namelist()
+          PY
+
+      - name: Publish v1.0.1 pointing to the same full-source commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/studio-release/notes.md" <<EOF
+          sillytavern的个性化页面设计，把它变成比较通用的了聊天界面
+
+          ## 完整源码已同步
+          main 现已包含 SillyTavern 本体和默认启用的 QQ 风格页面。
+          本次 Release 的标签、Source code 和 Full ZIP 均对应提交：\`$SOURCE_SHA\`。
+          不再需要避开 GitHub 自动生成的 Source code 包。
+
+          ## 使用
+          下载 Full ZIP 或 Source code 并解压。需要 Node.js 20+（含 npm），首次启动自动安装依赖。
+          Windows：Start-QQStudio.bat；macOS：启动QQStudio.command；Linux：bash start-qq-studio.sh。
+          用户自行配置模型/API；不包含私人密钥、聊天、头像或背景素材。
+
+          ## 验证与许可
+          保留 v1.0.0，不改写历史标签。本版标为预发布版本。
+          已通过主题测试、语法检查和默认新界面校验；之前已在 macOS 完成全新安装及浏览器测试。
+          本工作流运行于 Linux，但未新增 Windows 实机运行验证。
+          AGPL-3.0，保留上游版权与修改声明。
+          EOF
+          gh release create v1.0.1 \
+            "$RUNNER_TEMP/studio-release/SillyTavern-QQ-Studio-Full-v1.0.1.zip" \
+            "$RUNNER_TEMP/studio-release/SillyTavern-QQ-Studio-Full-v1.0.1.sha256" \
+            --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" \
+            --title 'SillyTavern QQ Studio v1.0.1 — 完整源码同步版' \
+            --notes-file "$RUNNER_TEMP/studio-release/notes.md" --prerelease
+          printf '## Published\nSource commit: `%s`\nRelease: https://github.com/%s/releases/tag/v1.0.1\n' \
+            "$SOURCE_SHA" "$GITHUB_REPOSITORY" >> "$GITHUB_STEP_SUMMARY"
