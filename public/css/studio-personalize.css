@@ -1,0 +1,106 @@
+/* The appearance layer owns design tokens; preferences are allowlisted JS data. */
+body.st-studio{--qq-accent:#0099ff;--qq-bg:#f5f7fa;--qq-surface:#ffffff;--qq-side:#f0f3f7;--qq-rail:#e7edf5;--qq-text:#253246;--qq-muted:#758398;--qq-border:#e4e9f1;--qq-soft:color-mix(in srgb,var(--qq-accent) 10%,var(--qq-surface));--qq-bubble:#fff;--qq-own:color-mix(in srgb,var(--qq-accent) 15%,var(--qq-surface));--qq-radius:16px;--qq-font:15px;--studio-bg:var(--qq-bg);--studio-side:var(--qq-side);--studio-ink:var(--qq-text);--studio-muted:var(--qq-muted);--studio-border:var(--qq-border);--studio-accent:var(--qq-accent);--SmartThemeBodyColor:var(--qq-text);--SmartThemeEmColor:var(--qq-muted);--SmartThemeQuoteColor:var(--qq-accent);--SmartThemeBlurTintColor:var(--qq-surface);--SmartThemeBorderColor:var(--qq-border);--SmartThemeChatTintColor:var(--qq-bg);--SmartThemeUserMesBlurTintColor:var(--qq-own);--SmartThemeBotMesBlurTintColor:var(--qq-bubble);--SmartThemeFontScale:1;--avatar-size:40px;background:var(--qq-bg)!important;color:var(--qq-text)!important}
+body.st-studio[data-studio-skin=dark]{color-scheme:dark;--qq-bg:#171d27;--qq-surface:#222b38;--qq-side:#1d2531;--qq-rail:#151d28;--qq-text:#e2e9f4;--qq-muted:#9baac1;--qq-border:#333f50;--qq-bubble:#252f3d;--qq-own:color-mix(in srgb,var(--qq-accent) 30%,#253247)}
+body.st-studio[data-studio-skin=light]{color-scheme:light}
+body.st-studio #studio-nav{background:var(--qq-side);border-color:var(--qq-border)}
+body.st-studio #studio-header{background:var(--qq-surface);border-color:var(--qq-border);color:var(--qq-text)}
+body.st-studio #studio-header small,body.st-studio .studio-brand small{color:var(--qq-muted)}
+body.st-studio .studio-brand-icon{background:var(--qq-accent);font-style:normal;font-family:inherit;box-shadow:0 5px 16px color-mix(in srgb,var(--qq-accent) 20%,transparent)}
+body.st-studio #studio-nav .studio-new{background:var(--qq-surface);border-color:var(--qq-border);color:var(--qq-accent)}
+body.st-studio #studio-nav .studio-nav-item{color:var(--qq-muted)}
+body.st-studio #studio-nav .studio-nav-item.selected,body.st-studio #studio-nav .studio-nav-item:hover{color:var(--qq-accent);background:var(--qq-soft)}
+body.st-studio #studio-header button{color:var(--qq-muted);border-color:var(--qq-border)}
+body.st-studio .studio-nav-bottom{border-color:var(--qq-border)}
+body.st-studio #send_form{background:var(--qq-surface)!important;border-color:var(--qq-border)!important;border-radius:14px!important;box-shadow:0 5px 24px #12203306!important}
+body.st-studio #send_textarea{font-size:var(--qq-font)!important;text-align:left!important}
+body.st-studio #send_but{background:var(--qq-accent);color:#fff!important;border-radius:10px;width:40px;height:40px;font-size:18px;display:grid;place-items:center;margin:4px}
+body.st-studio #sheld{background:var(--qq-bg)!important}
+body.st-studio.st-studio-background #sheld{background:transparent!important}
+body.st-studio .mes_text{font-size:var(--qq-font)!important;color:var(--qq-text)!important}
+body.st-studio .mes .name_text{color:var(--qq-muted)!important}
+body.st-studio .mes .timestamp{color:var(--qq-muted)!important}
+body.st-studio.studio-no-time .mes .timestamp{display:none!important}
+body.st-studio .mes[is_user=true]{background:transparent!important}
+body.st-studio[data-studio-bubbles=bubbles] #chat>.mes{align-items:flex-start;gap:12px;padding:14px 0!important}
+body.st-studio[data-studio-bubbles=bubbles] #chat>.mes[is_user=true]{flex-direction:row-reverse}
+body.st-studio[data-studio-bubbles=bubbles] #chat>.mes .mes_block{width:auto;flex:0 1 auto;min-width:0;max-width:calc(100% - 60px)}
+body.st-studio[data-studio-bubbles=bubbles] #chat>.mes .mes_text{padding:12px 17px;border:1px solid var(--qq-border);border-radius:var(--qq-radius);border-top-left-radius:4px;background:var(--qq-bubble);width:fit-content;min-width:50px;max-width:100%;margin-top:7px;box-shadow:0 2px 4px #14233b03}
+body.st-studio[data-studio-bubbles=bubbles] #chat>.mes[is_user=true] .mes_block{display:flex;flex-direction:column;align-items:flex-end}
+body.st-studio[data-studio-bubbles=bubbles] #chat>.mes[is_user=true] .mes_text{background:var(--qq-own);border-color:transparent;border-top-left-radius:var(--qq-radius);border-top-right-radius:4px}
+body.st-studio[data-studio-bubbles=bubbles] #chat>.mes .mes_text:empty{display:none}
+body.st-studio[data-studio-density=compact] #chat>.mes{padding:7px 0!important}
+body.st-studio .mes .avatar img,body.st-studio .qq-conversation img{border-radius:12px!important;box-shadow:none!important}
+body.st-studio[data-studio-avatar=circle] .mes .avatar img,body.st-studio[data-studio-avatar=circle] .qq-conversation img,body.st-studio[data-studio-avatar=circle] .qq-preview-avatar{border-radius:50%!important}
+body.st-studio[data-studio-avatar=square] .mes .avatar img,body.st-studio[data-studio-avatar=square] .qq-conversation img,body.st-studio[data-studio-avatar=square] .qq-preview-avatar{border-radius:2px!important}
+body.st-studio[data-studio-bubbles=document] #chat>.mes[is_user=true]{background:var(--qq-soft)!important}
+/* QQ-inspired three-column shell. No QQ logo or remote assets. */
+#qq-list{display:none}#qq-list-toggle{display:none}
+body.st-studio[data-studio-layout=qq] #studio-nav{width:76px;padding:24px 10px 14px;align-items:center;background:var(--qq-rail)}
+body.st-studio[data-studio-layout=qq] .studio-brand{margin:0 0 28px}
+body.st-studio[data-studio-layout=qq] .studio-brand>div,body.st-studio[data-studio-layout=qq] #studio-nav>.studio-nav-label,body.st-studio[data-studio-layout=qq] .studio-sidebar-note{display:none}
+body.st-studio[data-studio-layout=qq] #studio-nav .studio-new{width:44px;height:42px;padding:0;font-size:0;margin-bottom:22px;border:0;background:var(--qq-surface);display:grid;place-items:center}
+body.st-studio[data-studio-layout=qq] #studio-nav .studio-new i{font-size:17px;margin:0}
+body.st-studio[data-studio-layout=qq] #studio-nav .studio-nav-item{font-size:0;justify-content:center;width:48px;height:46px;padding:12px;gap:0;border-radius:12px}
+body.st-studio[data-studio-layout=qq] #studio-nav .studio-nav-item i{font-size:19px;width:22px}
+body.st-studio[data-studio-layout=qq] #studio-nav .studio-nav-item span{display:none}
+body.st-studio[data-studio-layout=qq] #studio-nav .studio-nav-bottom{padding-top:12px;display:flex;flex-direction:column;gap:5px}
+body.st-studio[data-studio-layout=qq] #studio-nav .studio-nav-item:has(#studio-connection){display:none}
+body.st-studio[data-studio-layout=qq] #qq-list{display:flex;position:fixed;left:76px;top:0;bottom:0;width:264px;background:var(--qq-side);border-right:1px solid var(--qq-border);z-index:28;flex-direction:column;padding:26px 16px 16px;font:14px/1.4 ui-sans-serif,-apple-system,"PingFang SC",sans-serif;color:var(--qq-text);box-sizing:border-box}
+#qq-list *{box-sizing:border-box}#qq-list button{font:inherit;cursor:pointer;text-shadow:none}
+.qq-list-heading{display:flex;justify-content:space-between;align-items:center;margin:0 4px 18px}.qq-list-heading small{font-size:9px;letter-spacing:2px;color:var(--qq-muted)}.qq-list-heading h2{font-size:23px;font-weight:650;margin:8px 0 0;color:var(--qq-text)}#qq-list-count{font-size:11px;font-weight:400;background:var(--qq-border);padding:2px 6px;border-radius:5px;vertical-align:middle;margin-left:5px}
+#qq-list-add{width:30px;height:30px;border:1px solid var(--qq-border);border-radius:9px;color:var(--qq-muted);background:var(--qq-surface)}
+#qq-list-search{width:100%;padding:10px 12px;background:var(--qq-surface);color:var(--qq-text);border:1px solid var(--qq-border);border-radius:9px;font:12px inherit;outline-offset:2px;margin:0 0 17px}
+.qq-list-tabs{display:flex;border-bottom:1px solid var(--qq-border);gap:20px;padding:0 3px;margin-bottom:14px}.qq-list-tabs button{border:0;border-bottom:2px solid transparent;padding:0 0 10px;background:none;color:var(--qq-muted);font-size:12px!important}.qq-list-tabs button.active{color:var(--qq-accent);border-bottom-color:var(--qq-accent)}
+#qq-conversations{flex:1;min-height:0;overflow:auto;margin:0 -7px;padding:0 3px}.qq-conversation{display:flex;align-items:center;gap:11px;padding:13px 9px;width:100%;border:0;background:none;border-radius:10px;text-align:left;color:var(--qq-text);margin:0 0 4px}.qq-conversation:hover,.qq-conversation.active{background:var(--qq-soft)}.qq-conversation.active{box-shadow:inset 2px 0 var(--qq-accent)}.qq-conversation img{width:38px;height:38px;object-fit:cover;flex-shrink:0}.qq-conversation>span{min-width:0;flex:1}.qq-conversation strong{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}.qq-conversation small{display:block;font-size:11px;color:var(--qq-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:6px}.qq-list-empty{font-size:12px;color:var(--qq-muted);padding:18px 10px;line-height:1.8}
+#qq-personalize-link{display:flex;align-items:center;gap:10px;padding:14px 6px 0;border:0;border-top:1px solid var(--qq-border);background:none;color:var(--qq-muted);font-size:12px!important;text-align:left}#qq-personalize-link i:first-child{color:var(--qq-accent)}#qq-personalize-link i:last-child{margin-left:auto}
+body.st-studio[data-studio-layout=qq] #studio-header{left:340px;height:76px;padding:0 28px}
+body.st-studio[data-studio-layout=qq] #sheld{left:340px!important;width:calc(100% - 340px)!important;padding:0 28px!important}
+body.st-studio #studio-header strong{font-size:16px}body.st-studio #studio-header small:before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--qq-accent);margin:0 6px 1px 0}
+/* Tokenize settings, including the mounted native panels. */
+body.st-studio #studio-settings{color:var(--qq-text)}
+body.st-studio .studio-dialog{background:var(--qq-bg);border-color:var(--qq-border)}
+body.st-studio .studio-settings-nav{background:var(--qq-surface);border-color:var(--qq-border)}
+body.st-studio .studio-settings-main>header{border-color:var(--qq-border);background:var(--qq-surface)}
+body.st-studio #studio-settings-title,body.st-studio #studio-settings-body,body.st-studio .studio-control strong{color:var(--qq-text)}
+body.st-studio #studio-settings-desc,body.st-studio .studio-control p,body.st-studio .studio-footnote,body.st-studio .studio-card>p,body.st-studio .studio-nav-label{color:var(--qq-muted)}
+body.st-studio .studio-card{background:var(--qq-surface);border-color:var(--qq-border)}
+body.st-studio .studio-card h3{color:var(--qq-muted);letter-spacing:.4px}
+body.st-studio .studio-control{border-color:var(--qq-border)}
+body.st-studio .studio-settings-nav nav button{color:var(--qq-muted)}
+body.st-studio .studio-settings-nav nav button.selected,body.st-studio .studio-settings-nav nav button:hover{color:var(--qq-accent);background:var(--qq-soft)}
+body.st-studio #studio-search,body.st-studio .studio-control input[type=number],body.st-studio .studio-control select,body.st-studio #qq-profile-name{color:var(--qq-text);background:var(--qq-bg);border-color:var(--qq-border)}
+body.st-studio .studio-control select{width:142px!important;text-align:left;font-size:12px}
+body.st-studio #studio-close{color:var(--qq-muted);background:var(--qq-side)}
+body.st-studio .studio-notice{color:var(--qq-text);background:var(--qq-soft);border-color:var(--qq-border)}
+body.st-studio .studio-switch input:checked+span{background:var(--qq-accent)}
+body.st-studio .studio-switch span{background:var(--qq-border)}
+body.st-studio #studio-settings .studio-mounted{color:var(--qq-text)!important}
+body.st-studio #studio-settings .studio-mounted input:not([type=checkbox]):not([type=range]):not([type=file]),body.st-studio #studio-settings .studio-mounted textarea,body.st-studio #studio-settings .studio-mounted select{background:var(--qq-surface)!important;color:var(--qq-text)!important;border-color:var(--qq-border)!important}
+body.st-studio #studio-settings .studio-mounted .menu_button,body.st-studio #studio-settings .studio-mounted .inline-drawer-header{background:var(--qq-soft)!important;color:var(--qq-text)!important;border-color:var(--qq-border)!important}
+body.st-studio #studio-settings .studio-mounted small,body.st-studio #studio-settings .studio-mounted .notes{color:var(--qq-muted)}
+body.st-studio .studio-action-grid button{color:var(--qq-text);background:var(--qq-bg);border-color:var(--qq-border)}
+body.st-studio input{accent-color:var(--qq-accent)}
+/* The customization studio. */
+.qq-personal-hero{display:flex;gap:20px;align-items:center;justify-content:space-between;margin:0 0 22px}.qq-eyebrow{font-size:9px;letter-spacing:2px;color:var(--qq-accent);font-weight:600}.qq-personal-hero h3{font-size:20px;margin:10px 0 8px;font-weight:650;color:var(--qq-text)}.qq-personal-hero p{font-size:11px;color:var(--qq-muted);line-height:1.7;margin:0}.qq-hero-mark{width:60px;height:60px;border-radius:20px;background:var(--qq-soft);color:var(--qq-accent);display:grid;place-items:center;font-size:25px;flex-shrink:0;transform:rotate(-8deg)}
+.qq-preview{border:1px solid var(--qq-border);border-radius:14px;padding:0 18px 18px;background:var(--qq-side);margin:0 0 24px}.qq-preview-bar{display:flex;align-items:center;gap:8px;padding:13px 0;border-bottom:1px solid var(--qq-border);font-size:11px;color:var(--qq-muted);margin-bottom:18px}.qq-preview-bar small{margin-left:auto;font-size:10px}.qq-preview-dot{width:6px;height:6px;border-radius:50%;background:var(--qq-accent)}.qq-preview-message{display:flex;gap:10px;align-items:flex-start;font-size:var(--qq-font);margin:0 0 12px}.qq-preview-message.own{justify-content:flex-end;margin-bottom:0}.qq-preview-avatar{background:var(--qq-accent);color:white;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:12px;flex-shrink:0}.qq-preview-message>span:not(.qq-preview-avatar){background:var(--qq-bubble);border:1px solid var(--qq-border);padding:10px 13px;border-radius:var(--qq-radius);font-size:inherit;color:var(--qq-text)}.qq-preview-message.own>span:not(.qq-preview-avatar){background:var(--qq-own);border-color:transparent}
+.qq-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:15px 0}.qq-preset{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:10px;border:1px solid var(--qq-border);background:var(--qq-surface);color:var(--qq-text);text-align:left;min-width:0}.qq-preset.active{border-color:var(--qq-accent);box-shadow:0 0 0 1px var(--qq-accent)!important}.qq-preset strong{font-size:12px;font-weight:600;margin-left:3px}.qq-preset small{font-size:10px;color:var(--qq-muted);margin:0 3px 4px}.qq-swatch{display:block;width:100%;height:47px;border-radius:6px;background:color-mix(in srgb,var(--swatch) 9%,var(--qq-surface));position:relative;border-left:12px solid color-mix(in srgb,var(--swatch) 20%,var(--qq-surface))}.qq-swatch i,.qq-swatch b{position:absolute;display:block;height:8px;border-radius:5px}.qq-swatch i{width:40%;left:10px;top:10px;background:var(--qq-surface)}.qq-swatch b{width:48%;right:9px;bottom:10px;background:color-mix(in srgb,var(--swatch) 60%,var(--qq-surface))}
+#qq-accent{width:50px;height:34px;border:1px solid var(--qq-border);padding:3px;border-radius:8px;background:var(--qq-bg);cursor:pointer}
+.qq-range{display:flex;align-items:center;gap:10px;width:160px;flex-shrink:0}.qq-range input{width:112px}.qq-range output{color:var(--qq-muted);font-size:11px;min-width:30px}.qq-times{display:flex;gap:8px;flex-shrink:0}.qq-times label{font-size:10px;color:var(--qq-muted)}.qq-times input{display:block;margin-top:6px;width:95px;border:1px solid var(--qq-border);border-radius:7px;padding:7px;background:var(--qq-bg);color:var(--qq-text);font:12px inherit}
+.qq-links{display:flex;gap:8px;flex-wrap:wrap;padding:10px 0 14px}.qq-links button,.qq-import,.qq-profile button,#qq-profile-save{display:inline-flex;align-items:center;gap:7px;background:var(--qq-soft);color:var(--qq-accent);border:1px solid var(--qq-border);border-radius:7px;font-size:11px!important;padding:8px 10px;cursor:pointer}.qq-profile-save{display:flex;gap:8px;margin:14px 0}#qq-profile-name{min-width:0;flex:1;border:1px solid var(--qq-border);border-radius:7px;padding:9px 11px;font-size:12px}#qq-profile-save{flex-shrink:0}.qq-profile{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--qq-border);padding:10px 0}.qq-profile>span{flex:1;overflow-wrap:anywhere;font-size:12px}#qq-profiles{font-size:12px;color:var(--qq-muted);padding:6px 0}#qq-feedback{font-size:12px;color:var(--qq-accent);line-height:1.6;margin:0 0 10px}#qq-feedback[data-error=true]{color:#d95b64}
+body.st-studio.studio-reduce-motion *,body.st-studio.studio-reduce-motion *:before,body.st-studio.studio-reduce-motion *:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+body.st-studio #studio-settings :focus-visible,body.st-studio #qq-list :focus-visible{outline:2px solid var(--qq-accent);outline-offset:3px}
+@media(max-width:1100px) and (min-width:901px){body.st-studio[data-studio-layout=qq] #qq-list{width:224px}body.st-studio[data-studio-layout=qq] #studio-header{left:300px}body.st-studio[data-studio-layout=qq] #sheld{left:300px!important;width:calc(100% - 300px)!important;padding:0 20px!important}}
+@media(max-width:900px){body.st-studio[data-studio-layout=qq] #qq-list{display:none}body.st-studio[data-studio-layout=qq].qq-list-open #qq-list{display:flex;box-shadow:12px 0 30px #0002}body.st-studio[data-studio-layout=qq] #studio-header{left:76px}body.st-studio[data-studio-layout=qq] #sheld{left:76px!important;width:calc(100% - 76px)!important;padding:0 18px!important}body.st-studio[data-studio-layout=qq] #qq-list-toggle{display:block}body.st-studio[data-studio-layout=qq] #studio-header>div{flex:1;margin-left:10px}}
+@media(max-width:640px){body.st-studio[data-studio-layout=qq] #studio-nav{display:none}body.st-studio[data-studio-layout=qq] #studio-nav.mobile-open{display:flex;top:64px}body.st-studio[data-studio-layout=qq] #studio-header{left:0;height:64px;padding:0 12px;gap:6px}body.st-studio[data-studio-layout=qq] #studio-header>div{margin-left:0}body.st-studio[data-studio-layout=qq] #sheld{left:0!important;width:100%!important;padding:0 10px!important}body.st-studio[data-studio-layout=qq] #qq-list{left:0;top:64px;width:min(310px,100vw)}.qq-personal-hero h3{font-size:17px}.qq-hero-mark{display:none}.qq-presets{grid-template-columns:repeat(2,1fr)}.qq-range{width:117px;gap:5px}.qq-range input{width:80px}.qq-times{flex-direction:column}.qq-preview{padding:0 10px 14px}.qq-preview-message{font-size:min(var(--qq-font),15px)}.qq-preview-bar{flex-wrap:wrap}.qq-preview-bar small{font-size:9px}.studio-control select{max-width:125px}.qq-profile-save{flex-wrap:wrap}.qq-profile-save input{flex-basis:100%}body.st-studio[data-studio-bubbles=bubbles] #chat>.mes .mes_block{max-width:calc(100% - 48px)}body.st-studio #studio-header strong{font-size:13px}}
+
+body.st-studio #send_textarea::placeholder{text-align:left!important;color:var(--qq-muted)!important}
+body.st-studio[data-studio-bubbles=document] .qq-preview-message>span:not(.qq-preview-avatar){background:transparent;border-color:transparent;border-radius:0}
+body.st-studio[data-studio-bubbles=document] .qq-preview-message.own{justify-content:flex-start;flex-direction:row-reverse}
+body.st-studio[data-studio-bubbles=document] .qq-preview-message.own>span:not(.qq-preview-avatar){margin-right:auto;background:var(--qq-soft)}
+/* Native mobile CSS transforms html, making inset-only fixed overlays height zero.
+   Anchor the new shell to the viewport instead of that transformed containing block. */
+html:has(body.st-studio){transform:none!important;perspective:none!important;height:100%!important}
+body.st-studio #studio-settings{height:100dvh;bottom:auto}
+body.st-studio #qq-list{height:100dvh;bottom:auto}
+body.st-studio #studio-nav{height:100dvh;bottom:auto}
+@media(max-width:640px){body.st-studio #qq-list,body.st-studio #studio-nav.mobile-open{height:calc(100dvh - 64px)}}

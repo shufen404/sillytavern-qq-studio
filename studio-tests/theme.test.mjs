@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {defaults,normalizeTheme,resolveDark,exportTheme,importTheme,presets} from '../public/scripts/studio-theme-model.js';
+let checks=0;const test=(name,fn)=>{fn();checks++;console.log('PASS',name);};
+const date=(h,m=0)=>new Date(2026,9,12,h,m);
+test('default QQ layout and disabled automation',()=>assert.deepEqual(normalizeTheme(),defaults));
+test('six safe built-in presets',()=>{assert.equal(presets.length,6);for(const p of presets)assert.match(p.accent,/^#[a-f0-9]{6}$/i);});
+test('clamp slider values and ignore unknown secrets',()=>{const t=normalizeTheme({fontSize:999,bubbleRadius:-1,api_key:'SECRET'});assert.equal(t.fontSize,22);assert.equal(t.bubbleRadius,0);assert.equal(t.api_key,undefined);});
+test('invalid CSS strings never reach CSS variables',()=>assert.equal(normalizeTheme({accent:'url(https://evil.invalid)',mode:'<script>',layout:'other'}).accent,defaults.accent));
+test('nonfinite numeric values sanitized',()=>{assert.equal(normalizeTheme({fontSize:NaN}).fontSize,15);assert.equal(normalizeTheme({fontSize:Infinity}).fontSize,15);});
+test('cross-midnight schedule start inclusive end exclusive',()=>{const t={...defaults,mode:'schedule'};assert.equal(resolveDark(t,date(19,59)),false);assert.equal(resolveDark(t,date(20)),true);assert.equal(resolveDark(t,date(0)),true);assert.equal(resolveDark(t,date(6,59)),true);assert.equal(resolveDark(t,date(7)),false);});
+test('same-day schedule',()=>{const t={...defaults,mode:'schedule',nightStart:'09:00',dayStart:'17:00'};assert.equal(resolveDark(t,date(12)),true);assert.equal(resolveDark(t,date(18)),false);});
+test('system and manual modes',()=>{assert.equal(resolveDark({...defaults,mode:'system'},date(0),true),true);assert.equal(resolveDark({...defaults,mode:'system'},date(0),false),false);assert.equal(resolveDark({...defaults,mode:'dark'},date(12)),true);assert.equal(resolveDark({...defaults,mode:'light'},date(0)),false);});
+test('export import roundtrip includes only appearance',()=>{const data=exportTheme({...defaults,api_key:'secret',chat:['private'],thinking:true});assert.deepEqual(importTheme(JSON.stringify(data)),defaults);assert.equal(JSON.stringify(data).includes('secret'),false);});
+test('reject unrelated or unsupported import',()=>{for(const raw of ['{}','[]','null','oops',JSON.stringify({kind:'sillytavern-studio-theme',version:2}),JSON.stringify({kind:'sillytavern-studio-theme',version:1,appearance:[]})])assert.throws(()=>importTheme(raw));});
+test('reject oversized theme files',()=>assert.throws(()=>importTheme(' '.repeat(32769))));
+test('malicious property names excluded',()=>{const data=importTheme('{"kind":"sillytavern-studio-theme","version":1,"appearance":{"__proto__":{"polluted":true},"accent":"#123456"}}');assert.equal({}.polluted,undefined);assert.equal(data.accent,'#123456');});
+console.log(`${checks} test groups passed`);

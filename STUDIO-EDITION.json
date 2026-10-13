@@ -1,0 +1,10 @@
+{
+  "name": "SillyTavern QQ Studio",
+  "edition_version": "1.1.0",
+  "upstream_version": "1.19.0",
+  "upstream_commit": "06bde939fb1e9c4c8d8641d810f0a916b5bce127",
+  "source_repository": "https://github.com/shufen404/sillytavern-qq-studio",
+  "license": "AGPL-3.0",
+  "build_date": "2026-10-13",
+  "desktop_platform": "macOS-arm64"
+}

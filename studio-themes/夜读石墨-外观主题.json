@@ -1,0 +1,20 @@
+{
+  "kind": "sillytavern-studio-theme",
+  "version": 1,
+  "appearance": {
+    "preset": "slate",
+    "mode": "dark",
+    "layout": "qq",
+    "accent": "#61768f",
+    "fontSize": 15,
+    "bubbleRadius": 16,
+    "avatarShape": "circle",
+    "bubbleStyle": "bubbles",
+    "showTime": true,
+    "background": false,
+    "density": "comfortable",
+    "nightStart": "20:00",
+    "dayStart": "07:00",
+    "reducedMotion": false
+  }
+}
