@@ -1,0 +1,148 @@
+name: Publish desktop v1.1.0 from verified draft
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qq-studio-desktop-v1.1.0
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'shufen404/sillytavern-qq-studio' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e
+        with:
+          node-version: 24
+      - name: Locate the unpublished desktop draft and download verified assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v1.1.0" >/dev/null 2>&1; then
+            echo 'v1.1.0 tag already exists; refusing to replace it.'
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/desktop-release"
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$RUNNER_TEMP/desktop-release/releases.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          p = pathlib.Path(os.environ['RUNNER_TEMP']) / 'desktop-release'
+          releases = json.loads((p / 'releases.json').read_text())
+          matches = [r for r in releases if r['draft'] and r['name'].startswith('SillyTavern QQ Studio v1.1.0')]
+          assert len(matches) == 1, 'Expected exactly one desktop draft.'
+          release = matches[0]
+          expected = {
+              'SillyTavern-QQ-Studio-v1.1.0-macOS-arm64.zip': 'aaa2f1116d07cf9138193e01e51c3017d0567f1c111e98af4445a1bdcedadb11',
+              'SillyTavern-QQ-Studio-v1.1.0-Source.zip': 'ed067e10c89cabfec5a2f560fc92a164a93070aa1d989c6124716e6316cf0548',
+          }
+          assets = {a['name']: a for a in release['assets']}
+          assert 'SillyTavern-QQ-Studio-v1.1.0-SHA256SUMS.txt' in assets
+          for name, sha in expected.items():
+              assert name in assets, name
+              assert assets[name]['state'] == 'uploaded', name
+              if assets[name].get('digest'):
+                  assert assets[name]['digest'] == 'sha256:' + sha, name
+          (p / 'draft.json').write_text(json.dumps(release))
+          (p / 'assets.tsv').write_text(''.join(str(assets[name]['id']) + '\t' + name + '\t' + sha + '\n' for name, sha in expected.items()))
+          with open(os.environ['GITHUB_ENV'], 'a') as out:
+              out.write('DRAFT_ID=' + str(release['id']) + '\n')
+          PY
+          while IFS=$'\t' read -r id name sha; do
+            gh api -H 'Accept: application/octet-stream' "repos/$GITHUB_REPOSITORY/releases/assets/$id" > "$RUNNER_TEMP/desktop-release/$name"
+            printf '%s  %s\n' "$sha" "$RUNNER_TEMP/desktop-release/$name" | sha256sum --check --strict
+          done < "$RUNNER_TEMP/desktop-release/assets.tsv"
+      - name: Import full source while preserving Git metadata and workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib, stat, zipfile
+          root = pathlib.Path.cwd()
+          archive = pathlib.Path(os.environ['RUNNER_TEMP']) / 'desktop-release/SillyTavern-QQ-Studio-v1.1.0-Source.zip'
+          forbidden = {'.git', '.github', 'data', 'node_modules', 'runtime', 'backups'}
+          with zipfile.ZipFile(archive) as z:
+              assert z.testzip() is None
+              infos = z.infolist()
+              assert len(infos) < 2500 and sum(i.file_size for i in infos) < 250_000_000
+              for info in infos:
+                  path = pathlib.PurePosixPath(info.filename)
+                  assert path.parts[0] == 'SillyTavern-QQ-Studio' and '..' not in path.parts and not path.is_absolute()
+                  if len(path.parts) < 2 or info.is_dir():
+                      continue
+                  rel = pathlib.Path(*path.parts[1:])
+                  assert rel.parts[0] not in forbidden
+                  assert rel.name not in ('secrets.json', '.env') and rel != pathlib.Path('config.yaml')
+                  mode = info.external_attr >> 16
+                  assert not stat.S_ISLNK(mode)
+                  dest = root / rel
+                  assert dest.resolve().is_relative_to(root.resolve())
+                  dest.parent.mkdir(parents=True, exist_ok=True)
+                  dest.write_bytes(z.read(info))
+                  dest.chmod(0o755 if mode & 0o111 else 0o644)
+          edition = json.loads((root / 'STUDIO-EDITION.json').read_text())
+          assert edition['edition_version'] == '1.1.0'
+          for f in ['server.js','public/script.js','desktop/macos/App.swift','desktop/macos/build_desktop.py','LICENSE']:
+              assert (root / f).is_file(), f
+          PY
+      - name: Validate source and defaults
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check studio-launcher.mjs
+          node --check public/scripts/studio-ui.js
+          node --check public/scripts/studio-personalize.js
+          node studio-tests/theme.test.mjs
+          node studio-tests/defaults.test.mjs
+          python3 -c "import ast,pathlib; ast.parse(pathlib.Path('desktop/macos/build_desktop.py').read_text())"
+          bash -n start-qq-studio.sh
+          python3 - <<'PY'
+          import json, pathlib
+          s = json.loads(pathlib.Path('default/content/settings.json').read_text())
+          assert s['oai_settings']['openai_max_context'] >= s['oai_settings']['openai_max_tokens'] + 1024
+          for f in ['data','node_modules','runtime','config.yaml','secrets.json']:
+              assert not pathlib.Path(f).exists(), f
+          PY
+      - name: Commit complete source to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add native macOS desktop edition and full v1.1.0 source'
+          fi
+          gh auth setup-git --hostname github.com
+          git push origin HEAD:main
+          echo "SOURCE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Publish the prepared release at the full-source commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'desktop-release'
+          draft = json.loads((root / 'draft.json').read_text())
+          body = draft['body'] or ''
+          body += '\n\n## Source commit\nFull desktop and application source is synchronized to main. The v1.1.0 tag points to `' + os.environ['SOURCE_SHA'] + '`.\n'
+          payload = {'tag_name':'v1.1.0','target_commitish':os.environ['SOURCE_SHA'],'draft':False,'prerelease':True,'name':'SillyTavern QQ Studio v1.1.0 — macOS 桌面版','body':body}
+          (root / 'publish.json').write_text(json.dumps(payload))
+          PY
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$DRAFT_ID" --input "$RUNNER_TEMP/desktop-release/publish.json" --jq .html_url
+          actual=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v1.1.0" --jq .object.sha)
+          test "$actual" = "$SOURCE_SHA"
+          printf '## Published v1.1.0\nCommit: `%s`\n' "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
